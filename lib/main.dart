@@ -592,7 +592,7 @@ class ProfilePage extends StatelessWidget {
   }
 }
 
-// ===================== FORM FEEDBACK =====================
+// ============ FORM FEEDBACK + DIALOG + SNACKBAR + LOADING ============
 
 class FeedbackForm extends StatefulWidget {
   const FeedbackForm({super.key});
@@ -614,6 +614,7 @@ class _FeedbackFormState extends State<FeedbackForm> {
   final TextEditingController commentController = TextEditingController();
 
   String result = 'Belum ada feedback terkirim';
+  bool isLoading = false;
 
   @override
   void dispose() {
@@ -623,16 +624,59 @@ class _FeedbackFormState extends State<FeedbackForm> {
     super.dispose();
   }
 
-  void submit() {
-    // Validasi form sebelum menampilkan hasil.
-    if (formKey.currentState!.validate()) {
-      setState(() {
-        result =
-            'Terkirim oleh ${nameController.text.trim()} '
-            '(${nimController.text.trim()}): '
-            '"${commentController.text.trim()}"';
-      });
-    }
+  Future<void> submit() async {
+    // 1. Validasi form sebelum melanjutkan.
+    if (!formKey.currentState!.validate()) return;
+
+    // 2. AlertDialog konfirmasi sebelum aksi penting.
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Konfirmasi'),
+          content: Text(
+            'Kirim feedback sebagai '
+            '${nameController.text.trim()} (${nimController.text.trim()})?\n\n'
+            '"${commentController.text.trim()}"',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Kirim'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted) return;
+    if (confirmed != true) return; // dibatalkan, tidak ada proses lanjutan
+
+    // 3. Simulasi loading singkat dengan CircularProgressIndicator.
+    setState(() => isLoading = true);
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Cek mounted sebelum memakai context/setState setelah await.
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = false;
+      result =
+          'Terkirim oleh ${nameController.text.trim()} '
+          '(${nimController.text.trim()}): '
+          '"${commentController.text.trim()}"';
+    });
+
+    // 4. SnackBar sebagai feedback singkat setelah berhasil.
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(content: Text('Feedback berhasil dikirim')),
+      );
   }
 
   @override
@@ -697,9 +741,16 @@ class _FeedbackFormState extends State<FeedbackForm> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: submit,
-                  icon: const Icon(Icons.send),
-                  label: const Text('Kirim Feedback'),
+                  // Dinonaktifkan saat loading agar tidak terkirim dua kali.
+                  onPressed: isLoading ? null : submit,
+                  icon: isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send),
+                  label: Text(isLoading ? 'Mengirim...' : 'Kirim Feedback'),
                 ),
               ),
               const SizedBox(height: 12),
