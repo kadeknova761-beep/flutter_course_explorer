@@ -258,7 +258,8 @@ class HomePage extends StatelessWidget {
           const Text(
             'Selamat datang di Course Explorer. Buka tab Courses untuk '
             'melihat daftar materi, menekan kartu untuk detail, menandai '
-            'favorite, atau menekan lama untuk info singkat.',
+            'favorite, atau menekan lama untuk info singkat. Form feedback '
+            'ada di tab Profile.',
           ),
         ],
       ),
@@ -581,6 +582,128 @@ class ProfilePage extends StatelessWidget {
               Text(
                 'Kelas ${student['kelas']} - Semester ${student['semester']}',
               ),
+              const SizedBox(height: 16),
+              const FeedbackForm(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ===================== FORM FEEDBACK =====================
+
+class FeedbackForm extends StatefulWidget {
+  const FeedbackForm({super.key});
+
+  @override
+  State<FeedbackForm> createState() => _FeedbackFormState();
+}
+
+class _FeedbackFormState extends State<FeedbackForm> {
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+  // Nama dan NIM terisi default dari konstanta identitas.
+  final TextEditingController nameController = TextEditingController(
+    text: studentName,
+  );
+  final TextEditingController nimController = TextEditingController(
+    text: studentId,
+  );
+  final TextEditingController commentController = TextEditingController();
+
+  String result = 'Belum ada feedback terkirim';
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    nimController.dispose();
+    commentController.dispose();
+    super.dispose();
+  }
+
+  void submit() {
+    // Validasi form sebelum menampilkan hasil.
+    if (formKey.currentState!.validate()) {
+      setState(() {
+        result =
+            'Terkirim oleh ${nameController.text.trim()} '
+            '(${nimController.text.trim()}): '
+            '"${commentController.text.trim()}"';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Form Feedback',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nama',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Nama wajib diisi';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: nimController,
+                decoration: const InputDecoration(
+                  labelText: 'NIM',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'NIM wajib diisi';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: commentController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Komentar',
+                  hintText: 'Tulis komentar minimal 5 karakter',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().length < 5) {
+                    return 'Komentar minimal 5 karakter';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: submit,
+                  icon: const Icon(Icons.send),
+                  label: const Text('Kirim Feedback'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(result),
             ],
           ),
         ),
