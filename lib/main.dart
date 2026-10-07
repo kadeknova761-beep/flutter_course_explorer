@@ -5,6 +5,7 @@ import 'package:flutter/services.dart' show rootBundle;
 
 const String studentName = 'Kadek Nova Krisna Putra';
 const String studentId = '2415051117';
+const String studentClass = 'PTI 5C';
 
 Future<List<Map<String, dynamic>>> loadCourses() async {
   final jsonString = await rootBundle.loadString(
@@ -48,19 +49,88 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: CourseListPage(),
+      home: MainShell(),
     );
   }
 }
 
-class CourseListPage extends StatefulWidget {
-  const CourseListPage({super.key});
+class MainShell extends StatefulWidget {
+  const MainShell({super.key});
 
   @override
-  State<CourseListPage> createState() => _CourseListPageState();
+  State<MainShell> createState() => _MainShellState();
 }
 
-class _CourseListPageState extends State<CourseListPage> {
+class _MainShellState extends State<MainShell> {
+  int currentIndex = 0;
+
+  static const List<String> titles = ['Home', 'Courses', 'Profile'];
+
+  final List<Widget> pages = const [HomePage(), CoursesPage(), ProfilePage()];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Tahap 10: ${titles[currentIndex]}')),
+      body: IndexedStack(index: currentIndex, children: pages),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: currentIndex,
+        onDestinationSelected: (index) {
+          setState(() => currentIndex = index);
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.school_outlined),
+            selectedIcon: Icon(Icons.school),
+            label: 'Courses',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.home, size: 64),
+          SizedBox(height: 12),
+          Text(
+            '$studentId - $studentName',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 4),
+          Text('Selamat datang di Course Explorer'),
+        ],
+      ),
+    );
+  }
+}
+
+class CoursesPage extends StatefulWidget {
+  const CoursesPage({super.key});
+
+  @override
+  State<CoursesPage> createState() => _CoursesPageState();
+}
+
+class _CoursesPageState extends State<CoursesPage> {
   late Future<List<Map<String, dynamic>>> coursesFuture;
 
   @override
@@ -71,153 +141,111 @@ class _CourseListPageState extends State<CourseListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Tahap 9: Returning Data')),
-      body: Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              '$studentId - $studentName',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.all(16),
+          child: Text(
+            '$studentId - $studentName',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: coursesFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text('Gagal memuat data: ${snapshot.error}'),
-                  );
-                }
-
-                final courses = snapshot.data!;
-
-                return ListView.builder(
-                  itemCount: courses.length,
-                  itemBuilder: (context, index) {
-                    final course = courses[index];
-                    final status = course['status'] as String;
-
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      child: ListTile(
-                        leading: Icon(
-                          Icons.menu_book,
-                          color: statusColor(status),
-                        ),
-                        title: Text(course['title'] as String),
-                        subtitle: Text(
-                          '${course['code']} - ${course['credits']} SKS',
-                        ),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () async {
-                          final result = await Navigator.push<bool>(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => CourseDetailPage(course: course),
-                            ),
-                          );
-
-                          if (!context.mounted) return;
-
-                          if (result == true) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  '${course['title']} ditambahkan ke favorite',
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                      ),
-                    );
-                  },
+        ),
+        Expanded(
+          child: FutureBuilder<List<Map<String, dynamic>>>(
+            future: coursesFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text('Gagal memuat data: ${snapshot.error}'),
                 );
-              },
-            ),
+              }
+
+              final courses = snapshot.data!;
+
+              return ListView.builder(
+                itemCount: courses.length,
+                itemBuilder: (context, index) {
+                  final course = courses[index];
+                  final status = course['status'] as String;
+
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.menu_book,
+                        color: statusColor(status),
+                      ),
+                      title: Text(course['title'] as String),
+                      subtitle: Text(
+                        '${course['code']} - ${course['credits']} SKS',
+                      ),
+                      trailing: Text(
+                        statusLabel(status),
+                        style: TextStyle(
+                          color: statusColor(status),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-class CourseDetailPage extends StatelessWidget {
-  final Map<String, dynamic> course;
-
-  const CourseDetailPage({super.key, required this.course});
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final status = course['status'] as String;
-    final color = statusColor(status);
-
-    return Scaffold(
-      appBar: AppBar(title: Text(course['title'] as String)),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '$studentId - $studentName',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const CircleAvatar(
+            radius: 48,
+            backgroundImage: AssetImage('assets/images/profile.jpg'),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            studentName,
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const Text(studentId),
+          const SizedBox(height: 16),
+          const Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: Icon(Icons.badge),
+                  title: Text('NIM'),
+                  subtitle: Text(studentId),
+                ),
+                ListTile(
+                  leading: Icon(Icons.person),
+                  title: Text('Nama'),
+                  subtitle: Text(studentName),
+                ),
+                ListTile(
+                  leading: Icon(Icons.groups),
+                  title: Text('Kelas'),
+                  subtitle: Text(studentClass),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Card(
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.title),
-                    title: const Text('Judul'),
-                    subtitle: Text(course['title'] as String),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.tag),
-                    title: const Text('Kode'),
-                    subtitle: Text(course['code'] as String),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.school),
-                    title: const Text('SKS'),
-                    subtitle: Text('${course['credits']} SKS'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.circle, color: color),
-                    title: const Text('Status'),
-                    subtitle: Text(
-                      statusLabel(status),
-                      style: TextStyle(
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () => Navigator.pop(context, true),
-              icon: const Icon(Icons.favorite),
-              label: const Text('Tambah ke Favorite'),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Kembali tanpa memilih'),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
