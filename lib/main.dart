@@ -38,6 +38,20 @@ String statusLabel(String status) {
   }
 }
 
+class NavItem {
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+
+  const NavItem(this.icon, this.selectedIcon, this.label);
+}
+
+const List<NavItem> navItems = [
+  NavItem(Icons.home_outlined, Icons.home, 'Home'),
+  NavItem(Icons.school_outlined, Icons.school, 'Courses'),
+  NavItem(Icons.person_outline, Icons.person, 'Profile'),
+];
+
 void main() {
   runApp(const MyApp());
 }
@@ -49,53 +63,84 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MainShell(),
+      home: ResponsiveShell(),
     );
   }
 }
 
-class MainShell extends StatefulWidget {
-  const MainShell({super.key});
+class ResponsiveShell extends StatefulWidget {
+  const ResponsiveShell({super.key});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  State<ResponsiveShell> createState() => _ResponsiveShellState();
 }
 
-class _MainShellState extends State<MainShell> {
-  int currentIndex = 0;
-
-  static const List<String> titles = ['Home', 'Courses', 'Profile'];
+class _ResponsiveShellState extends State<ResponsiveShell> {
+  int selectedIndex = 0;
 
   final List<Widget> pages = const [HomePage(), CoursesPage(), ProfilePage()];
 
+  void selectIndex(int index) {
+    setState(() => selectedIndex = index);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Tahap 10: ${titles[currentIndex]}')),
-      body: IndexedStack(index: currentIndex, children: pages),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
-        onDestinationSelected: (index) {
-          setState(() => currentIndex = index);
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isWide = width >= 840;
+        final category = width < 600
+            ? 'Compact'
+            : (width < 840 ? 'Medium' : 'Expanded');
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              'Tahap 11: ${navItems[selectedIndex].label} ($category)',
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.school_outlined),
-            selectedIcon: Icon(Icons.school),
-            label: 'Courses',
+          body: Row(
+            children: [
+              if (isWide)
+                NavigationRail(
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: selectIndex,
+                  labelType: NavigationRailLabelType.all,
+                  destinations: navItems
+                      .map(
+                        (item) => NavigationRailDestination(
+                          icon: Icon(item.icon),
+                          selectedIcon: Icon(item.selectedIcon),
+                          label: Text(item.label),
+                        ),
+                      )
+                      .toList(),
+                ),
+              if (isWide) const VerticalDivider(width: 1),
+              Expanded(
+                key: const ValueKey('page-content'),
+                child: IndexedStack(index: selectedIndex, children: pages),
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-      ),
+          bottomNavigationBar: isWide
+              ? null
+              : NavigationBar(
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: selectIndex,
+                  destinations: navItems
+                      .map(
+                        (item) => NavigationDestination(
+                          icon: Icon(item.icon),
+                          selectedIcon: Icon(item.selectedIcon),
+                          label: item.label,
+                        ),
+                      )
+                      .toList(),
+                ),
+        );
+      },
     );
   }
 }
