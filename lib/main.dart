@@ -72,7 +72,7 @@ class _CourseListPageState extends State<CourseListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tahap 8: List ke Detail')),
+      appBar: AppBar(title: const Text('Tahap 9: Returning Data')),
       body: Column(
         children: [
           const Padding(
@@ -118,13 +118,25 @@ class _CourseListPageState extends State<CourseListPage> {
                           '${course['code']} - ${course['credits']} SKS',
                         ),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async {
+                          final result = await Navigator.push<bool>(
                             context,
                             MaterialPageRoute(
                               builder: (_) => CourseDetailPage(course: course),
                             ),
                           );
+
+                          if (!context.mounted) return;
+
+                          if (result == true) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '${course['title']} ditambahkan ke favorite',
+                                ),
+                              ),
+                            );
+                          }
                         },
                       ),
                     );
@@ -194,9 +206,15 @@ class CourseDetailPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pop(context, true),
+              icon: const Icon(Icons.favorite),
+              label: const Text('Tambah ke Favorite'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Kembali'),
+              child: const Text('Kembali tanpa memilih'),
             ),
           ],
         ),
