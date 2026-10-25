@@ -6,7 +6,7 @@ import 'package:flutter/services.dart' show rootBundle;
 const String studentName = 'Kadek Nova Krisna Putra';
 const String studentId = '2415051117';
 
-// ===== SAKLAR DEBUGGING TAHAP 16 =====
+// ===== SAKLAR DEBUGGING TAHAP 16 (PERTEMUAN 5) =====
 // Kasus A: true = Row tanpa Expanded (overflow), false = perbaikan.
 const bool showOverflowBug = false;
 // Kasus B: true = ListView di Column tanpa Expanded (unbounded), false = perbaikan.
@@ -15,6 +15,16 @@ const bool showUnboundedBug = false;
 const bool showKeyboardBug = false;
 // Kasus D: true = tombol bisa memicu push berkali-kali, false = ada guard.
 const bool allowDoublePush = false;
+
+// ===== KLASIFIKASI STATE (PERTEMUAN 6 - TAHAP 1) =====
+// LOCAL STATE (hanya dipakai satu widget, dikelola dengan setState):
+//   1. selectedIndex   -> _ResponsiveShellState (tab aktif navigasi)
+//   2. isLoading       -> _FeedbackFormState (loading saat kirim feedback)
+//   3. showDetail      -> _CourseDetailPageState (show/hide deskripsi course)
+//   4. keyboardOpen    -> _KeyboardCasePageState (simulasi keyboard)
+// SHARED STATE (dibutuhkan beberapa screen/widget):
+//   5. favorites       -> dimiliki shell, dipakai Home, Courses, Profile
+//   6. data courses    -> dimuat sekali di shell, dipakai Home, Courses, Profile
 
 /// Membaca assets/data/student_data.json lalu mengubahnya menjadi Map.
 Future<Map<String, dynamic>> loadStudentData() async {
@@ -101,12 +111,14 @@ class ResponsiveShell extends StatefulWidget {
 }
 
 class _ResponsiveShellState extends State<ResponsiveShell> {
+  // LOCAL STATE: tab aktif hanya dipakai oleh shell ini.
   int selectedIndex = 0;
 
   // late: diisi di initState(), Future dibuat satu kali.
   late Future<Map<String, dynamic>> studentFuture;
 
-  // State favorite dipusatkan di shell agar dipakai Home, Courses, Profile.
+  // SHARED STATE: favorites dipusatkan di shell agar dipakai
+  // Home, Courses, dan Profile.
   final Set<String> favorites = {};
 
   // GlobalKey menjaga state halaman ketika layout berpindah
@@ -545,7 +557,7 @@ class CourseCard extends StatelessWidget {
 
 // ====================== DETAIL COURSE ======================
 
-class CourseDetailPage extends StatelessWidget {
+class CourseDetailPage extends StatefulWidget {
   final Map<String, dynamic> course;
   final bool isFavorite;
 
@@ -556,7 +568,18 @@ class CourseDetailPage extends StatelessWidget {
   });
 
   @override
+  State<CourseDetailPage> createState() => _CourseDetailPageState();
+}
+
+class _CourseDetailPageState extends State<CourseDetailPage> {
+  // LOCAL STATE: hanya halaman detail ini yang perlu tahu apakah
+  // deskripsi sedang ditampilkan atau disembunyikan.
+  bool showDetail = false;
+
+  @override
   Widget build(BuildContext context) {
+    final course = widget.course;
+    final bool isFavorite = widget.isFavorite;
     final String status = course['status'] as String;
 
     return Scaffold(
@@ -588,7 +611,36 @@ class CourseDetailPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
+                // Local state dengan setState(): show/hide deskripsi course.
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      showDetail = !showDetail;
+                    });
+                  },
+                  icon: Icon(
+                    showDetail ? Icons.expand_less : Icons.expand_more,
+                  ),
+                  label: Text(
+                    showDetail
+                        ? 'Sembunyikan deskripsi'
+                        : 'Tampilkan deskripsi',
+                  ),
+                ),
+                if (showDetail)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Text(
+                        'Course ${course['title']} (${course['code']}) '
+                        'bernilai ${course['credits']} SKS dan saat ini '
+                        'berstatus ${statusLabel(status)}.\n\n'
+                        'Dilihat oleh: $studentId - $studentName',
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
                 // Jika sudah favorite, tombol dinonaktifkan.
                 FilledButton.icon(
                   onPressed: isFavorite
@@ -706,6 +758,8 @@ class _FeedbackFormState extends State<FeedbackForm> {
   final TextEditingController commentController = TextEditingController();
 
   String result = 'Belum ada feedback terkirim';
+
+  // LOCAL STATE: status loading hanya relevan untuk form ini.
   bool isLoading = false;
 
   @override
@@ -895,7 +949,7 @@ class SummaryCard extends StatelessWidget {
   }
 }
 
-// ================= DEBUGGING CHALLENGE (TAHAP 16) =================
+// ================= DEBUGGING CHALLENGE (PERTEMUAN 5) =================
 
 class DebugMenuPage extends StatelessWidget {
   const DebugMenuPage({super.key});
@@ -1072,6 +1126,8 @@ class _KeyboardCasePageState extends State<KeyboardCasePage> {
   // Chrome di komputer tidak punya keyboard layar, jadi ruang yang
   // dipakai keyboard disimulasikan dengan padding bawah.
   static const double keyboardSimHeight = 400;
+
+  // LOCAL STATE: simulasi keyboard hanya dipakai halaman ini.
   bool keyboardOpen = false;
 
   @override
