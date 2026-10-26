@@ -67,7 +67,7 @@ class _SetStateExperimentPageState extends State<SetStateExperimentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tahap 2: Masalah setState')),
+      appBar: AppBar(title: const Text('Masalah setState')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

@@ -49,7 +49,7 @@ class _LiftingStateExperimentPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tahap 3: Lifting State Up'),
+        title: const Text('Lifting State Up'),
         actions: [
           // Widget 3: hanya menerima nilai dari parent.
           FavoriteIconBadge(isFavorite: favorite),

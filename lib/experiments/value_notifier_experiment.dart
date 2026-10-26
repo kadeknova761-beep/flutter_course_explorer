@@ -60,7 +60,7 @@ class _ValueNotifierExperimentPageState
     pageBuilds++;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tahap 4: ValueNotifier')),
+      appBar: AppBar(title: const Text('ValueNotifier')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
