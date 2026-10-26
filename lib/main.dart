@@ -9,8 +9,7 @@ import 'providers/course_provider.dart';
 const String studentName = 'Kadek Nova Krisna Putra';
 const String studentId = '2415051117';
 
-
-const bool showOverflowBug = false;n.
+const bool showOverflowBug = false;
 const bool showUnboundedBug = false;
 const bool showKeyboardBug = false;
 const bool allowDoublePush = false;
