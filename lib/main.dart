@@ -21,7 +21,7 @@ const bool allowDoublePush = false;
 //   3. showDetail      -> _CourseDetailPageState (show/hide deskripsi course)
 //   4. keyboardOpen    -> _KeyboardCasePageState (simulasi keyboard)
 // SHARED STATE (dibutuhkan beberapa screen/widget):
-//   5. favorites       -> dimiliki shell, dipakai Home, Courses, Profile
+//   5. favorites       -> CourseProvider (Provider), dipakai Home, Courses, Profile
 //   6. data courses    -> dimuat sekali di shell, dipakai Home, Courses, Profile
 
 /// Membaca assets/data/student_data.json lalu mengubahnya menjadi Map.
@@ -122,9 +122,8 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
   // late: diisi di initState(), Future dibuat satu kali.
   late Future<Map<String, dynamic>> studentFuture;
 
-  // SHARED STATE: favorites dipusatkan di shell agar dipakai
-  // Home, Courses, dan Profile.
-  final Set<String> favorites = {};
+  // SHARED STATE favorites kini dikelola CourseProvider (Tahap 7),
+  // sehingga shell tidak perlu menyimpannya lagi.
 
   // GlobalKey menjaga state halaman ketika layout berpindah
   // antara NavigationBar dan NavigationRail.
@@ -134,20 +133,6 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
   void initState() {
     super.initState();
     studentFuture = loadStudentData();
-  }
-
-  void toggleFavorite(String code) {
-    setState(() {
-      if (favorites.contains(code)) {
-        favorites.remove(code);
-      } else {
-        favorites.add(code);
-      }
-    });
-  }
-
-  void addFavorite(String code) {
-    setState(() => favorites.add(code));
   }
 
   Widget _buildContent() {
@@ -179,14 +164,9 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
         return IndexedStack(
           index: selectedIndex,
           children: [
-            HomePage(student: student, courses: courses, favorites: favorites),
-            CoursesPage(
-              courses: courses,
-              favorites: favorites,
-              onToggleFavorite: toggleFavorite,
-              onAddFavorite: addFavorite,
-            ),
-            ProfilePage(student: student, favoriteCount: favorites.length),
+            HomePage(student: student, courses: courses),
+            CoursesPage(courses: courses),
+            ProfilePage(student: student),
           ],
         );
       },
@@ -257,17 +237,17 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
 class HomePage extends StatelessWidget {
   final Map<String, dynamic> student;
   final List<Map<String, dynamic>> courses;
-  final Set<String> favorites;
 
-  const HomePage({
-    super.key,
-    required this.student,
-    required this.courses,
-    required this.favorites,
-  });
+  const HomePage({super.key, required this.student, required this.courses});
 
   @override
   Widget build(BuildContext context) {
+    // watch(): mendengarkan perubahan sehingga HomePage di-rebuild
+    // setiap CourseProvider memanggil notifyListeners().
+    final provider = context.watch<CourseProvider>();
+    final favorites = provider.favorites;
+    debugPrint('[Rebuild] HomePage (watch)');
+
     final int totalCredits = courses.fold<int>(
       0,
       (sum, c) => sum + (c['credits'] as int),
@@ -351,17 +331,8 @@ class HomePage extends StatelessWidget {
 
 class CoursesPage extends StatelessWidget {
   final List<Map<String, dynamic>> courses;
-  final Set<String> favorites;
-  final void Function(String code) onToggleFavorite;
-  final void Function(String code) onAddFavorite;
 
-  const CoursesPage({
-    super.key,
-    required this.courses,
-    required this.favorites,
-    required this.onToggleFavorite,
-    required this.onAddFavorite,
-  });
+  const CoursesPage({super.key, required this.courses});
 
   int columnsFor(double width) {
     if (width < 600) return 1;
@@ -376,20 +347,24 @@ class CoursesPage extends StatelessWidget {
   ) async {
     final String code = course['code'] as String;
 
+    // read(): membaca sekali saat tombol ditekan, tanpa listen.
+    final bool alreadyFavorite = context.read<CourseProvider>().isFavorite(
+      code,
+    );
+
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => CourseDetailPage(
-          course: course,
-          isFavorite: favorites.contains(code),
-        ),
+        builder: (_) =>
+            CourseDetailPage(course: course, isFavorite: alreadyFavorite),
       ),
     );
 
     if (!context.mounted) return;
 
     if (result == true) {
-      onAddFavorite(code);
+      // read(): memanggil aksi, bukan menampilkan data.
+      context.read<CourseProvider>().addFavorite(code);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${course['title']} ditambahkan ke favorite')),
       );
@@ -432,6 +407,8 @@ class CoursesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[Rebuild] CoursesPage (seluruh halaman)');
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final int columns = columnsFor(constraints.maxWidth);
@@ -448,9 +425,16 @@ class CoursesPage extends StatelessWidget {
                 ),
               ),
             ),
-            Text(
-              '${favorites.length} favorite | $columns kolom | '
-              '${constraints.maxWidth.toStringAsFixed(0)} px',
+            // Consumer: hanya teks ringkasan ini yang di-rebuild saat
+            // favorite berubah, bukan seluruh CoursesPage.
+            Consumer<CourseProvider>(
+              builder: (context, provider, child) {
+                debugPrint('[Rebuild] CoursesPage - teks ringkasan (Consumer)');
+                return Text(
+                  '${provider.favoriteCount} favorite | $columns kolom | '
+                  '${constraints.maxWidth.toStringAsFixed(0)} px',
+                );
+              },
             ),
             Expanded(
               child: GridView.builder(
@@ -464,14 +448,11 @@ class CoursesPage extends StatelessWidget {
                 itemCount: courses.length,
                 itemBuilder: (context, index) {
                   final course = courses[index];
-                  final String code = course['code'] as String;
 
                   return CourseCard(
                     course: course,
-                    isFavorite: favorites.contains(code),
                     onTap: () => openDetail(context, course),
                     onLongPress: () => showInfo(context, course),
-                    onFavorite: () => onToggleFavorite(code),
                   );
                 },
               ),
@@ -486,23 +467,20 @@ class CoursesPage extends StatelessWidget {
 /// Reusable widget: kartu course yang bisa di-tap, long press, dan favorite.
 class CourseCard extends StatelessWidget {
   final Map<String, dynamic> course;
-  final bool isFavorite;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
-  final VoidCallback onFavorite;
 
   const CourseCard({
     super.key,
     required this.course,
-    required this.isFavorite,
     required this.onTap,
     required this.onLongPress,
-    required this.onFavorite,
   });
 
   @override
   Widget build(BuildContext context) {
     final String status = course['status'] as String;
+    final String code = course['code'] as String;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -543,14 +521,26 @@ class CourseCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // Tombol favorite dengan icon berbeda untuk aktif/nonaktif.
-              IconButton(
-                tooltip: isFavorite ? 'Hapus dari favorite' : 'Tambah favorite',
-                onPressed: onFavorite,
-                icon: Icon(
-                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: isFavorite ? Colors.red : null,
-                ),
+              // Consumer pada bagian kecil: hanya tombol favorite kartu ini
+              // yang di-rebuild ketika favorite berubah.
+              Consumer<CourseProvider>(
+                builder: (context, provider, child) {
+                  final bool isFavorite = provider.isFavorite(code);
+                  debugPrint('[Rebuild] CourseCard - tombol favorite $code');
+                  return IconButton(
+                    tooltip: isFavorite
+                        ? 'Hapus dari favorite'
+                        : 'Tambah favorite',
+                    onPressed: () {
+                      // read(): memanggil aksi tanpa listen.
+                      context.read<CourseProvider>().toggleFavorite(code);
+                    },
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: isFavorite ? Colors.red : null,
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -674,16 +664,15 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
 
 class ProfilePage extends StatelessWidget {
   final Map<String, dynamic> student;
-  final int favoriteCount;
 
-  const ProfilePage({
-    super.key,
-    required this.student,
-    required this.favoriteCount,
-  });
+  const ProfilePage({super.key, required this.student});
 
   @override
   Widget build(BuildContext context) {
+    // watch(): jumlah favorite ditampilkan dan harus ikut berubah.
+    final int favoriteCount = context.watch<CourseProvider>().favoriteCount;
+    debugPrint('[Rebuild] ProfilePage (watch)');
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Center(
