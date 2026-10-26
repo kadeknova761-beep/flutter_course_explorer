@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../providers/course_provider.dart';
+import '../repositories/course_repository.dart';
+import '../services/course_service.dart';
+
+// Demo Tahap 5 (Pertemuan 6): CourseProvider (ChangeNotifier) dengan
+// notifyListeners(). Provider belum dipasang (itu Tahap 6), jadi widget
+// mendengarkan perubahan memakai ListenableBuilder bawaan Flutter.
+// Dijalankan dengan:
+//   flutter run -d chrome -t lib/experiments/change_notifier_experiment.dart
 
 const String studentName = 'Kadek Nova Krisna Putra';
 const String studentId = '2415051117';
@@ -45,7 +53,9 @@ class ChangeNotifierExperimentPage extends StatefulWidget {
 class _ChangeNotifierExperimentPageState
     extends State<ChangeNotifierExperimentPage> {
   // Object state dibuat satu kali dan di-dispose bersama halaman.
-  final CourseProvider provider = CourseProvider();
+  final CourseProvider provider = CourseProvider(
+    CourseRepository(CourseService()),
+  );
 
   @override
   void dispose() {
@@ -56,7 +66,7 @@ class _ChangeNotifierExperimentPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ChangeNotifier')),
+      appBar: AppBar(title: const Text('Tahap 5: ChangeNotifier')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
