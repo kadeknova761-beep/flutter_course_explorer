@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 
-// Eksperimen Tahap 3 (Pertemuan 6): lifting state up dan single source of truth.
-// File ini berdiri sendiri dan dijalankan dengan:
-//   flutter run -d chrome -t lib/experiments/lifting_state_experiment.dart
-
 const String studentName = 'Kadek Nova Krisna Putra';
 const String studentId = '2415051117';
 
@@ -29,10 +25,6 @@ class LiftingStateExperimentApp extends StatelessWidget {
 }
 
 // ============== PARENT: SATU-SATUNYA PEMILIK STATE ==============
-
-// Parent ini adalah ancestor terdekat dari semua widget yang membutuhkan
-// status favorite (CourseCard, FavoriteStatusPanel, FavoriteIconBadge),
-// sehingga state ditempatkan di sini (lifting state up).
 class LiftingStateExperimentPage extends StatefulWidget {
   const LiftingStateExperimentPage({super.key});
 
