@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 
-// Eksperimen Tahap 4 (Pertemuan 6): ValueNotifier dan ValueListenableBuilder.
-// File ini berdiri sendiri dan dijalankan dengan:
-//   flutter run -d chrome -t lib/experiments/value_notifier_experiment.dart
-
 const String studentName = 'Kadek Nova Krisna Putra';
 const String studentId = '2415051117';
 

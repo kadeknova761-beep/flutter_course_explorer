@@ -2,18 +2,17 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:provider/provider.dart';
+
+import 'providers/course_provider.dart';
 
 const String studentName = 'Kadek Nova Krisna Putra';
 const String studentId = '2415051117';
 
-// ===== SAKLAR DEBUGGING TAHAP 16 (PERTEMUAN 5) =====
-// Kasus A: true = Row tanpa Expanded (overflow), false = perbaikan.
-const bool showOverflowBug = false;
-// Kasus B: true = ListView di Column tanpa Expanded (unbounded), false = perbaikan.
+
+const bool showOverflowBug = false;n.
 const bool showUnboundedBug = false;
-// Kasus C: true = form tanpa scroll (keyboard overflow), false = perbaikan.
 const bool showKeyboardBug = false;
-// Kasus D: true = tombol bisa memicu push berkali-kali, false = ada guard.
 const bool allowDoublePush = false;
 
 // ===== KLASIFIKASI STATE (PERTEMUAN 6 - TAHAP 1) =====
@@ -69,7 +68,14 @@ String statusLabel(String status) {
 }
 
 void main() {
-  runApp(const MyApp());
+  // Tahap 6: CourseProvider disediakan di atas MyApp sehingga seluruh
+  // widget di bawahnya dapat mengaksesnya (dipakai mulai Tahap 7).
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => CourseProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
