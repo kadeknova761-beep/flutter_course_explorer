@@ -1,30 +1,28 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'package:flutter_ui_fundamentals/app.dart';
+import 'package:flutter_ui_fundamentals/providers/course_provider.dart';
+import 'package:flutter_ui_fundamentals/repositories/course_repository.dart';
+import 'package:flutter_ui_fundamentals/services/course_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
-import 'package:flutter_ui_fundamentals/main.dart';
-
+// Nama: Kadek Nova Krisna Putra | NIM: 2415051117
+//
+// Smoke test: aplikasi dapat dibangun dengan Provider dan menampilkan
+// halaman Home beserta tiga destinasi navigasi utama.
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Course Explorer menampilkan Home dan navigasi utama', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => CourseProvider(CourseRepository(CourseService())),
+        child: const MyApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Course Explorer - Home'), findsOneWidget);
+    expect(find.text('Courses'), findsOneWidget);
+    expect(find.text('Profile'), findsOneWidget);
   });
 }
