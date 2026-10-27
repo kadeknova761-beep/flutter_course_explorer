@@ -18,35 +18,13 @@ class CoursesPage extends StatelessWidget {
     return 3;
   }
 
-  // Tap: buka detail, tunggu hasil (true jika dipilih sebagai favorite).
-  Future<void> openDetail(
-    BuildContext context,
-    Map<String, dynamic> course,
-  ) async {
-    final String code = course['code'] as String;
-
-    // read(): membaca sekali saat tombol ditekan, tanpa listen.
-    final bool alreadyFavorite = context.read<CourseProvider>().isFavorite(
-      code,
-    );
-
-    final result = await Navigator.push<bool>(
+  // Tap: buka detail. Status favorite dibaca langsung oleh halaman detail
+  // dari CourseProvider, sehingga tidak perlu dikirim lewat constructor.
+  void openDetail(BuildContext context, Map<String, dynamic> course) {
+    Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) =>
-            CourseDetailPage(course: course, isFavorite: alreadyFavorite),
-      ),
+      MaterialPageRoute(builder: (_) => CourseDetailPage(course: course)),
     );
-
-    if (!context.mounted) return;
-
-    if (result == true) {
-      // read(): memanggil aksi, bukan menampilkan data.
-      context.read<CourseProvider>().addFavorite(code);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${course['title']} ditambahkan ke favorite')),
-      );
-    }
   }
 
   // Long press: tampilkan info singkat course.

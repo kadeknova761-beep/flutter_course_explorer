@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../constants/student_identity.dart';
+import '../providers/course_provider.dart';
 import '../utils/course_status.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final Map<String, dynamic> course;
-  final bool isFavorite;
 
-  const CourseDetailPage({
-    super.key,
-    required this.course,
-    this.isFavorite = false,
-  });
+  const CourseDetailPage({super.key, required this.course});
 
   @override
   State<CourseDetailPage> createState() => _CourseDetailPageState();
@@ -25,11 +22,16 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   @override
   Widget build(BuildContext context) {
     final course = widget.course;
-    final bool isFavorite = widget.isFavorite;
     final String status = course['status'] as String;
+    final String code = course['code'] as String;
+    final String title = course['title'] as String;
+
+    // watch(): status favorite dibaca dari CourseProvider (shared state),
+    // sehingga selalu sama dengan daftar course dan halaman Favorites.
+    final bool isFavorite = context.watch<CourseProvider>().isFavorite(code);
 
     return Scaffold(
-      appBar: AppBar(title: Text(course['title'] as String)),
+      appBar: AppBar(title: Text(title)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Center(
@@ -44,17 +46,32 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                 ),
                 const SizedBox(height: 16),
                 Card(
-                  child: ListTile(
-                    leading: Icon(
-                      statusIcon(status),
-                      color: statusColor(status),
-                      size: 36,
-                    ),
-                    title: Text(course['title'] as String),
-                    subtitle: Text(
-                      '${course['code']} - ${course['credits']} SKS - '
-                      '${statusLabel(status)}',
-                    ),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: Icon(
+                          statusIcon(status),
+                          color: statusColor(status),
+                          size: 36,
+                        ),
+                        title: Text(title),
+                        subtitle: Text(
+                          '$code - ${course['credits']} SKS - '
+                          '${statusLabel(status)}',
+                        ),
+                      ),
+                      ListTile(
+                        leading: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? Colors.red : null,
+                        ),
+                        title: Text(
+                          isFavorite
+                              ? 'Status favorite: Ya'
+                              : 'Status favorite: Belum',
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -77,7 +94,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Text(
-                        'Course ${course['title']} (${course['code']}) '
+                        'Course $title ($code) '
                         'bernilai ${course['credits']} SKS dan saat ini '
                         'berstatus ${statusLabel(status)}.\n\n'
                         'Dilihat oleh: $studentId - $studentName',
@@ -85,20 +102,36 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                     ),
                   ),
                 const SizedBox(height: 8),
-                // Jika sudah favorite, tombol dinonaktifkan.
+                // Toggle favorite langsung ke CourseProvider (read: aksi).
                 FilledButton.icon(
-                  onPressed: isFavorite
-                      ? null
-                      : () => Navigator.pop(context, true),
-                  icon: Icon(isFavorite ? Icons.check : Icons.favorite),
+                  onPressed: () {
+                    final provider = context.read<CourseProvider>();
+                    final bool wasFavorite = provider.isFavorite(code);
+                    provider.toggleFavorite(code);
+
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            wasFavorite
+                                ? '$title dihapus dari favorite'
+                                : '$title ditambahkan ke favorite',
+                          ),
+                        ),
+                      );
+                  },
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                  ),
                   label: Text(
-                    isFavorite ? 'Sudah di Favorite' : 'Tambah ke Favorite',
+                    isFavorite ? 'Hapus dari Favorite' : 'Tambah ke Favorite',
                   ),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Kembali tanpa memilih'),
+                  child: const Text('Kembali'),
                 ),
               ],
             ),

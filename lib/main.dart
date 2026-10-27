@@ -8,7 +8,7 @@ import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'services/course_service.dart';
 
-// ===== KLASIFIKASI STATE (PERTEMUAN 6 - TAHAP 1) =====
+// KLASIFIKASI STATE
 // LOCAL STATE (hanya dipakai satu widget, dikelola dengan setState):
 //   1. selectedIndex   -> _ResponsiveShellState (tab aktif navigasi)
 //   2. isLoading       -> _FeedbackFormState (loading saat kirim feedback)
@@ -23,7 +23,9 @@ void main() {
   // widget di bawahnya dapat mengaksesnya (dipakai mulai Tahap 7).
   runApp(
     ChangeNotifierProvider(
-      create: (_) => CourseProvider(CourseRepository(CourseService())),
+      // loadCourses(): course dimuat lewat Provider -> Repository -> Service.
+      create: (_) =>
+          CourseProvider(CourseRepository(CourseService()))..loadCourses(),
       child: const MyApp(),
     ),
   );

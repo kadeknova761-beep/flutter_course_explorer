@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/student_data_service.dart';
 import 'courses_page.dart';
+import 'favorites_page.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
 
@@ -14,6 +15,7 @@ class NavItem {
 const List<NavItem> navItems = [
   NavItem(Icons.home, 'Home'),
   NavItem(Icons.school, 'Courses'),
+  NavItem(Icons.favorite, 'Favorites'),
   NavItem(Icons.person, 'Profile'),
 ];
 
@@ -75,6 +77,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
           children: [
             HomePage(student: student, courses: courses),
             CoursesPage(courses: courses),
+            const FavoritesPage(),
             ProfilePage(student: student),
           ],
         );
