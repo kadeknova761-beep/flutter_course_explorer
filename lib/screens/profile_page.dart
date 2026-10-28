@@ -5,6 +5,7 @@ import '../constants/student_identity.dart';
 import '../providers/course_provider.dart';
 import '../widgets/feedback_form.dart';
 import 'debug_challenge_pages.dart';
+import 'state_debug_pages.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -55,7 +56,20 @@ class ProfilePage extends StatelessWidget {
                   );
                 },
                 icon: const Icon(Icons.bug_report),
-                label: const Text('Debugging Challenge (Tahap 16)'),
+                label: const Text('Debugging Layout (Pertemuan 5)'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const StateDebugMenuPage(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.bug_report),
+                label: const Text('Debugging State (Pertemuan 6)'),
               ),
               const SizedBox(height: 16),
               const FeedbackForm(),
