@@ -8,7 +8,7 @@ import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'services/course_service.dart';
 
-// KLASIFIKASI STATE
+// ===== KLASIFIKASI STATE (PERTEMUAN 6 - TAHAP 1) =====
 // LOCAL STATE (hanya dipakai satu widget, dikelola dengan setState):
 //   1. selectedIndex   -> _ResponsiveShellState (tab aktif navigasi)
 //   2. isLoading       -> _FeedbackFormState (loading saat kirim feedback)
@@ -16,7 +16,7 @@ import 'services/course_service.dart';
 //   4. keyboardOpen    -> _KeyboardCasePageState (simulasi keyboard)
 // SHARED STATE (dibutuhkan beberapa screen/widget):
 //   5. favorites       -> CourseProvider (Provider), dipakai Home, Courses, Profile
-//   6. data courses    -> dimuat sekali di shell, dipakai Home, Courses, Profile
+//   6. data courses    -> CourseProvider.loadCourses() (Provider -> Repository -> Service)
 
 void main() {
   // Tahap 6: CourseProvider disediakan di atas MyApp sehingga seluruh

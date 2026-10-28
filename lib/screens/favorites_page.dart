@@ -5,6 +5,7 @@ import '../constants/student_identity.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../utils/course_status.dart';
+import '../widgets/course_state_gate.dart';
 
 // Halaman yang hanya menampilkan course favorite. Data course dan daftar
 // favorite dibaca dari CourseProvider (single source of truth).
@@ -13,92 +14,87 @@ class FavoritesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<CourseProvider>();
-    debugPrint('[Rebuild] FavoritesPage (watch)');
-
-    final favoriteCourses = provider.courses
-        .where((c) => provider.isFavorite(c.code))
-        .toList();
-
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             '$studentId - $studentName',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 4),
-          Text('${favoriteCourses.length} course favorite'),
           const SizedBox(height: 8),
-          Expanded(child: _buildBody(context, provider, favoriteCourses)),
+          Expanded(
+            child: CourseStateGate(
+              builder: (context, courses) => FavoritesList(courses: courses),
+            ),
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildBody(
-    BuildContext context,
-    CourseProvider provider,
-    List<Course> favoriteCourses,
-  ) {
-    if (provider.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+class FavoritesList extends StatelessWidget {
+  final List<Course> courses;
 
-    if (provider.error != null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(provider.error!, textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            FilledButton(
-              onPressed: () => context.read<CourseProvider>().loadCourses(),
-              child: const Text('Coba lagi'),
-            ),
-          ],
+  const FavoritesList({super.key, required this.courses});
+
+  @override
+  Widget build(BuildContext context) {
+    // watch(): daftar ikut berubah ketika favorite ditambah atau dihapus.
+    final provider = context.watch<CourseProvider>();
+    debugPrint('[Rebuild] FavoritesPage - daftar (watch)');
+
+    final favoriteCourses = courses
+        .where((c) => provider.isFavorite(c.code))
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('${favoriteCourses.length} course favorite'),
+        const SizedBox(height: 8),
+        Expanded(
+          child: favoriteCourses.isEmpty
+              ? const Center(
+                  child: Text(
+                    'Belum ada course favorite. Tekan ikon hati pada daftar '
+                    'course atau halaman detail.',
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: favoriteCourses.length,
+                  itemBuilder: (context, index) {
+                    final course = favoriteCourses[index];
+                    return Card(
+                      child: ListTile(
+                        leading: Icon(
+                          statusIcon(course.status),
+                          color: statusColor(course.status),
+                          size: 32,
+                        ),
+                        title: Text(course.title),
+                        subtitle: Text(
+                          '${course.code} - ${course.credits} SKS - '
+                          '${statusLabel(course.status)}',
+                        ),
+                        trailing: IconButton(
+                          tooltip: 'Hapus dari favorite',
+                          onPressed: () {
+                            context.read<CourseProvider>().toggleFavorite(
+                              course.code,
+                            );
+                          },
+                          icon: const Icon(Icons.favorite, color: Colors.red),
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
-      );
-    }
-
-    if (favoriteCourses.isEmpty) {
-      return const Center(
-        child: Text(
-          'Belum ada course favorite. Tekan ikon hati pada daftar course '
-          'atau halaman detail.',
-          textAlign: TextAlign.center,
-        ),
-      );
-    }
-
-    return ListView.builder(
-      itemCount: favoriteCourses.length,
-      itemBuilder: (context, index) {
-        final course = favoriteCourses[index];
-        return Card(
-          child: ListTile(
-            leading: Icon(
-              statusIcon(course.status),
-              color: statusColor(course.status),
-              size: 32,
-            ),
-            title: Text(course.title),
-            subtitle: Text(
-              '${course.code} - ${course.credits} SKS - '
-              '${statusLabel(course.status)}',
-            ),
-            trailing: IconButton(
-              tooltip: 'Hapus dari favorite',
-              onPressed: () {
-                context.read<CourseProvider>().toggleFavorite(course.code);
-              },
-              icon: const Icon(Icons.favorite, color: Colors.red),
-            ),
-          ),
-        );
-      },
+      ],
     );
   }
 }

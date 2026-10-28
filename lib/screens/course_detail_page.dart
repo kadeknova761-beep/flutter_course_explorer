@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../constants/student_identity.dart';
+import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../utils/course_status.dart';
 
 class CourseDetailPage extends StatefulWidget {
-  final Map<String, dynamic> course;
+  final Course course;
 
   const CourseDetailPage({super.key, required this.course});
 
@@ -22,16 +23,15 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   @override
   Widget build(BuildContext context) {
     final course = widget.course;
-    final String status = course['status'] as String;
-    final String code = course['code'] as String;
-    final String title = course['title'] as String;
 
     // watch(): status favorite dibaca dari CourseProvider (shared state),
     // sehingga selalu sama dengan daftar course dan halaman Favorites.
-    final bool isFavorite = context.watch<CourseProvider>().isFavorite(code);
+    final bool isFavorite = context.watch<CourseProvider>().isFavorite(
+      course.code,
+    );
 
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: Text(course.title)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Center(
@@ -40,9 +40,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   '$studentId - $studentName',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 Card(
@@ -50,14 +50,14 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                     children: [
                       ListTile(
                         leading: Icon(
-                          statusIcon(status),
-                          color: statusColor(status),
+                          statusIcon(course.status),
+                          color: statusColor(course.status),
                           size: 36,
                         ),
-                        title: Text(title),
+                        title: Text(course.title),
                         subtitle: Text(
-                          '$code - ${course['credits']} SKS - '
-                          '${statusLabel(status)}',
+                          '${course.code} - ${course.credits} SKS - '
+                          '${statusLabel(course.status)}',
                         ),
                       ),
                       ListTile(
@@ -94,9 +94,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Text(
-                        'Course $title ($code) '
-                        'bernilai ${course['credits']} SKS dan saat ini '
-                        'berstatus ${statusLabel(status)}.\n\n'
+                        'Course ${course.title} (${course.code}) '
+                        'bernilai ${course.credits} SKS dan saat ini '
+                        'berstatus ${statusLabel(course.status)}.\n\n'
                         'Dilihat oleh: $studentId - $studentName',
                       ),
                     ),
@@ -106,8 +106,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                 FilledButton.icon(
                   onPressed: () {
                     final provider = context.read<CourseProvider>();
-                    final bool wasFavorite = provider.isFavorite(code);
-                    provider.toggleFavorite(code);
+                    final bool wasFavorite = provider.isFavorite(course.code);
+                    provider.toggleFavorite(course.code);
 
                     ScaffoldMessenger.of(context)
                       ..hideCurrentSnackBar()
@@ -115,8 +115,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                         SnackBar(
                           content: Text(
                             wasFavorite
-                                ? '$title dihapus dari favorite'
-                                : '$title ditambahkan ke favorite',
+                                ? '${course.title} dihapus dari favorite'
+                                : '${course.title} ditambahkan ke favorite',
                           ),
                         ),
                       );

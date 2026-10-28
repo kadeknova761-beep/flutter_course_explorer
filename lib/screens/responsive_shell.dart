@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../services/student_data_service.dart';
 import 'courses_page.dart';
 import 'favorites_page.dart';
 import 'home_page.dart';
@@ -30,58 +29,22 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
   // LOCAL STATE: tab aktif hanya dipakai oleh shell ini.
   int selectedIndex = 0;
 
-  // late: diisi di initState(), Future dibuat satu kali.
-  late Future<Map<String, dynamic>> studentFuture;
-
-  // SHARED STATE favorites kini dikelola CourseProvider (Tahap 7),
-  // sehingga shell tidak perlu menyimpannya lagi.
-
   // GlobalKey menjaga state halaman ketika layout berpindah
   // antara NavigationBar dan NavigationRail.
   final GlobalKey _contentKey = GlobalKey();
 
-  @override
-  void initState() {
-    super.initState();
-    studentFuture = loadStudentData();
-  }
-
+  // Data course dan favorite dikelola CourseProvider, sehingga shell hanya
+  // mengatur navigasi.
   Widget _buildContent() {
-    return FutureBuilder<Map<String, dynamic>>(
+    return IndexedStack(
       key: _contentKey,
-      future: studentFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Gagal memuat data: ${snapshot.error}',
-                textAlign: TextAlign.center,
-              ),
-            ),
-          );
-        }
-
-        final data = snapshot.data!;
-        final student = data['student'] as Map<String, dynamic>;
-        final courses = (data['courses'] as List<dynamic>)
-            .map((c) => c as Map<String, dynamic>)
-            .toList();
-
-        return IndexedStack(
-          index: selectedIndex,
-          children: [
-            HomePage(student: student, courses: courses),
-            CoursesPage(courses: courses),
-            const FavoritesPage(),
-            ProfilePage(student: student),
-          ],
-        );
-      },
+      index: selectedIndex,
+      children: const [
+        HomePage(),
+        CoursesPage(),
+        FavoritesPage(),
+        ProfilePage(),
+      ],
     );
   }
 

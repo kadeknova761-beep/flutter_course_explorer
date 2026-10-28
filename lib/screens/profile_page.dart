@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../constants/student_identity.dart';
 import '../providers/course_provider.dart';
 import '../widgets/feedback_form.dart';
 import 'debug_challenge_pages.dart';
 
 class ProfilePage extends StatelessWidget {
-  final Map<String, dynamic> student;
-
-  const ProfilePage({super.key, required this.student});
+  const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -39,17 +38,12 @@ class ProfilePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
-                student['name'] as String,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
+              const Text(
+                studentName,
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
-              Text('${student['nim']}'),
-              Text(
-                'Kelas ${student['kelas']} - Semester ${student['semester']}',
-              ),
+              const Text(studentId),
+              const Text('Kelas $studentClass - Semester $studentSemester'),
               const SizedBox(height: 8),
               Text('Course favorite: $favoriteCount'),
               const SizedBox(height: 12),
