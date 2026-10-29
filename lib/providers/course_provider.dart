@@ -8,7 +8,8 @@ import '../repositories/course_repository.dart';
 // CourseProvider menyimpan dua kelompok state:
 //   1. Async state data course: courses, isLoading, error (Tahap 11)
 //   2. Shared state favorites: favorites dan toggleFavorite (Tahap 5)
-// Provider hanya berbicara dengan repository, tidak dengan rootBundle.
+// Provider hanya berbicara dengan repository, tidak mengakses file atau
+// sumber data secara langsung, dan tidak menyimpan context milik UI.
 class CourseProvider extends ChangeNotifier {
   final CourseRepository repository;
 

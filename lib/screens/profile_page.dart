@@ -63,9 +63,7 @@ class ProfilePage extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const StateDebugMenuPage(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const StateDebugMenuPage()),
                   );
                 },
                 icon: const Icon(Icons.bug_report),
