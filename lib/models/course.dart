@@ -29,11 +29,11 @@ class Course {
 
   /// id tidak dikirim karena dibuat oleh server.
   Map<String, dynamic> toJson() => {
-        'code': code,
-        'title': title,
-        'credits': credits,
-        'status': status,
-      };
+    'code': code,
+    'title': title,
+    'credits': credits,
+    'status': status,
+  };
 
   Course copyWith({
     int? id,
