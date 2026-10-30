@@ -9,7 +9,8 @@ import 'constants/api_config.dart';
 import 'constants/supabase_config.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
-import 'services/course_api_service.dart';
+import 'services/course_data_source.dart';
+import 'services/course_supabase_service.dart';
 
 // ===== KLASIFIKASI STATE (PERTEMUAN 6 - TAHAP 1) =====
 // LOCAL STATE (hanya dipakai satu widget, dikelola dengan setState):
@@ -33,17 +34,16 @@ Future<void> main() async {
     );
   }
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+  // Tahap 12: sumber data diganti ke Supabase (satu baris di bawah).
+  // Untuk kembali ke REST: CourseApiService(apiBaseUrl)
+  final CourseDataSource dataSource = CourseSupabaseService();
+  final repository = CourseRepository(dataSource);
 
-  // Tahap 6: CourseProvider disediakan di atas MyApp sehingga seluruh
-  // widget di bawahnya dapat mengaksesnya (dipakai mulai Tahap 7).
-  // Perakitan service -> repository -> provider tetap di sini. Sumber data
-  // masih REST API; pindah ke Supabase dilakukan di Tahap 12 dengan
-  // mengubah satu baris CourseApiService di bawah.
+  // Perakitan service -> repository -> provider dilakukan di sini,
+  // setelah Supabase.initialize.
   runApp(
     ChangeNotifierProvider(
-      create: (_) =>
-          CourseProvider(CourseRepository(CourseApiService(apiBaseUrl)))
-            ..loadCourses(),
+      create: (_) => CourseProvider(repository)..loadCourses(),
       child: const MyApp(),
     ),
   );
