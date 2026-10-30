@@ -7,10 +7,14 @@ import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../utils/course_status.dart';
 
-// Form tambah course. Halaman ini tidak memanggil http; data dikirim lewat
-// CourseProvider -> CourseRepository -> CourseApiService.
+// Form tambah/edit course. Halaman ini tidak memanggil http; data dikirim
+// lewat CourseProvider -> CourseRepository -> CourseApiService.
+// Jika [course] diisi, form berada pada mode edit (PUT); jika tidak, mode
+// tambah (POST).
 class CourseFormPage extends StatefulWidget {
-  const CourseFormPage({super.key});
+  final Course? course;
+
+  const CourseFormPage({super.key, this.course});
 
   @override
   State<CourseFormPage> createState() => _CourseFormPageState();
@@ -22,6 +26,20 @@ class _CourseFormPageState extends State<CourseFormPage> {
   final _titleController = TextEditingController();
   final _creditsController = TextEditingController();
   String _status = 'planned';
+
+  bool get _isEditing => widget.course != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final existing = widget.course;
+    if (existing != null) {
+      _codeController.text = existing.code;
+      _titleController.text = existing.title;
+      _creditsController.text = existing.credits.toString();
+      _status = existing.status;
+    }
+  }
 
   @override
   void dispose() {
@@ -60,20 +78,31 @@ class _CourseFormPageState extends State<CourseFormPage> {
       status: _status,
     );
 
-    final success = await provider.createCourse(course);
+    final existing = widget.course;
+    final bool success;
+    if (existing != null && existing.id != null) {
+      success = await provider.updateCourse(existing.id!, course);
+    } else {
+      success = await provider.createCourse(course);
+    }
 
     // Halaman bisa saja sudah ditutup selama request berjalan.
     if (!mounted) return;
 
+    final String doneText = _isEditing ? 'diperbarui' : 'dibuat';
+    final String failText = _isEditing
+        ? 'Gagal memperbarui course'
+        : 'Gagal membuat course';
+
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Course ${course.code} berhasil dibuat')),
+        SnackBar(content: Text('Course ${course.code} berhasil $doneText')),
       );
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(provider.saveError ?? 'Gagal membuat course')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(provider.saveError ?? failText)));
     }
   }
 
@@ -83,7 +112,7 @@ class _CourseFormPageState extends State<CourseFormPage> {
     final isSaving = context.select<CourseProvider, bool>((p) => p.isSaving);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Course')),
+      appBar: AppBar(title: Text(_isEditing ? 'Edit Course' : 'Tambah Course')),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
@@ -103,9 +132,14 @@ class _CourseFormPageState extends State<CourseFormPage> {
                   TextFormField(
                     controller: _codeController,
                     enabled: !isSaving,
-                    decoration: const InputDecoration(
+                    // Mode edit: code read-only karena dipakai sebagai kunci
+                    // favorites (Pertemuan 6).
+                    readOnly: _isEditing,
+                    decoration: InputDecoration(
                       labelText: 'Kode course',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      helperText: _isEditing ? 'Kode tidak dapat diubah' : null,
+                      suffixIcon: _isEditing ? const Icon(Icons.lock) : null,
                     ),
                     validator: (v) => _validateRequired(v, 'Kode course'),
                   ),
@@ -163,7 +197,7 @@ class _CourseFormPageState extends State<CourseFormPage> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Simpan'),
+                        : Text(_isEditing ? 'Simpan Perubahan' : 'Simpan'),
                   ),
                 ],
               ),

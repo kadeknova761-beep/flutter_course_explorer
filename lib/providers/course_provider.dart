@@ -80,6 +80,34 @@ class CourseProvider extends ChangeNotifier {
     return success;
   }
 
+  // ===================== SAVE STATE: UPDATE =====================
+
+  // Memakai flag isSaving yang sama dengan createCourse, jadi guard submit
+  // ganda berlaku untuk keduanya. Mengembalikan true jika berhasil.
+  Future<bool> updateCourse(int id, Course course) async {
+    if (_isSaving) return false;
+
+    _isSaving = true;
+    _saveError = null;
+    notifyListeners();
+
+    var success = false;
+    try {
+      await repository.updateCourse(id, course);
+      success = true;
+    } catch (e) {
+      _saveError = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+
+    if (success) {
+      await loadCourses();
+    }
+    return success;
+  }
+
   // ===================== SHARED STATE: FAVORITES =====================
 
   final Set<String> _favorites = {};

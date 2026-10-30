@@ -5,6 +5,7 @@ import '../constants/student_identity.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../utils/course_status.dart';
+import 'course_form_page.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final Course course;
@@ -20,15 +21,25 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   // deskripsi sedang ditampilkan atau disembunyikan.
   bool showDetail = false;
 
+  void _openEdit(Course course) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => CourseFormPage(course: course)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final course = widget.course;
-
-    // watch(): status favorite dibaca dari CourseProvider (shared state),
-    // sehingga selalu sama dengan daftar course dan halaman Favorites.
-    final bool isFavorite = context.watch<CourseProvider>().isFavorite(
-      course.code,
+    // watch(): course dan status favorite dibaca dari CourseProvider.
+    // Setelah Edit, data terbaru dicari berdasarkan id sehingga halaman
+    // ini tidak menampilkan data lama. Jika tidak ditemukan, pakai data
+    // yang dikirim lewat constructor.
+    final provider = context.watch<CourseProvider>();
+    final Course course = provider.courses.firstWhere(
+      (c) => c.id != null && c.id == widget.course.id,
+      orElse: () => widget.course,
     );
+    final bool isFavorite = provider.isFavorite(course.code);
 
     return Scaffold(
       appBar: AppBar(title: Text(course.title)),
@@ -86,7 +97,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                     showDetail ? Icons.expand_less : Icons.expand_more,
                   ),
                   label: Text(
-                    showDetail ? 'Sembunyikan deskripsi' : 'Tampilkan deskripsi',
+                    showDetail
+                        ? 'Sembunyikan deskripsi'
+                        : 'Tampilkan deskripsi',
                   ),
                 ),
                 if (showDetail)
@@ -105,9 +118,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                 // Toggle favorite langsung ke CourseProvider (read: aksi).
                 FilledButton.icon(
                   onPressed: () {
-                    final provider = context.read<CourseProvider>();
-                    final bool wasFavorite = provider.isFavorite(course.code);
-                    provider.toggleFavorite(course.code);
+                    final p = context.read<CourseProvider>();
+                    final bool wasFavorite = p.isFavorite(course.code);
+                    p.toggleFavorite(course.code);
 
                     ScaffoldMessenger.of(context)
                       ..hideCurrentSnackBar()
@@ -127,6 +140,13 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                   label: Text(
                     isFavorite ? 'Hapus dari Favorite' : 'Tambah ke Favorite',
                   ),
+                ),
+                const SizedBox(height: 8),
+                // Edit (HTTP PUT). Nonaktif jika course belum punya id.
+                OutlinedButton.icon(
+                  onPressed: course.id == null ? null : () => _openEdit(course),
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Edit Course'),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton(

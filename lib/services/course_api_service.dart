@@ -44,6 +44,24 @@ class CourseApiService {
     );
   }
 
+  // PUT /courses/{id}: mengganti seluruh resource (code, title, credits
+  // wajib; status opsional). Dipakai karena form edit mengirim semua field.
+  Future<void> updateCourse(int id, Course course) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/courses/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(course.toJson()),
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final detail = _errorDetail(response.body);
+      throw Exception(
+        'Gagal memperbarui course (HTTP ${response.statusCode})'
+        '${detail.isEmpty ? '' : ': $detail'}',
+      );
+    }
+  }
+
   // Mengambil pesan dari body error API: {"error": "...", "status": 400}.
   // Jika body bukan JSON yang diharapkan, kembalikan string kosong.
   String _errorDetail(String body) {
