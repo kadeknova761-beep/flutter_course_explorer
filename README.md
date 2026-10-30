@@ -100,4 +100,7 @@ status (planned/active/done, CHECK), created_at (timestamptz).
 RLS aktif dengan policy permisif untuk anon, hanya untuk laboratorium,
 bukan pola produksi. SQL lengkap: `docs/schema.sql`.
 
+
+## Status Tahap 16
+Course Data Manager: CRUD terintegrasi dengan Supabase (Read, Create, Update, Delete dengan konfirmasi), loading/empty/error state dengan retry, SnackBar, navigasi responsif, dan favorites berbasis code.
 Nama: Kadek Nova Krisna Putra | NIM: 2415051117 | Kelas: PTI 5C
