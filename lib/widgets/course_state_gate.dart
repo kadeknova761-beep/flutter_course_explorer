@@ -1,11 +1,13 @@
+// Nama: Kadek Nova Krisna Putra | NIM: 2415051117 | Kelas: PTI 5C
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/course.dart';
 import '../providers/course_provider.dart';
+import 'error_view.dart';
 
-// Widget reusable yang menampilkan tiga kondisi data course dari
-// CourseProvider: loading, error (dengan tombol coba lagi), dan success.
+// Widget reusable yang menampilkan empat kondisi data course dari
+// CourseProvider: loading, error (ErrorView + Retry), empty, dan success.
 // Screen cukup mengisi builder untuk kondisi success.
 class CourseStateGate extends StatelessWidget {
   final Widget Function(BuildContext context, List<Course> courses) builder;
@@ -21,6 +23,7 @@ class CourseStateGate extends StatelessWidget {
           (p) => (p.isLoading, p.error, p.courses.length),
         );
 
+    // 1. Loading
     if (isLoading) {
       return const Center(
         child: Padding(
@@ -37,23 +40,30 @@ class CourseStateGate extends StatelessWidget {
       );
     }
 
+    // 2. Error: pesan + tombol Retry. read() dipakai karena hanya
+    // memanggil aksi, bukan menampilkan data.
     if (error != null) {
+      return ErrorView(
+        message: error.replaceFirst('Exception: ', ''),
+        onRetry: () => context.read<CourseProvider>().loadCourses(),
+      );
+    }
+
+    // 3. Empty
+    if (count == 0) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const Icon(Icons.inbox_outlined, size: 48),
               const SizedBox(height: 8),
-              Text('Gagal memuat course', style: _titleStyle(context)),
-              const SizedBox(height: 4),
-              Text(error, textAlign: TextAlign.center),
+              const Text('Data course belum tersedia'),
               const SizedBox(height: 12),
-              FilledButton(
-                // read(): memanggil aksi, bukan menampilkan data.
+              OutlinedButton(
                 onPressed: () => context.read<CourseProvider>().loadCourses(),
-                child: const Text('Coba lagi'),
+                child: const Text('Muat ulang'),
               ),
             ],
           ),
@@ -61,19 +71,7 @@ class CourseStateGate extends StatelessWidget {
       );
     }
 
-    if (count == 0) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text('Belum ada data course'),
-        ),
-      );
-    }
-
+    // 4. Success
     return builder(context, context.read<CourseProvider>().courses);
-  }
-
-  TextStyle? _titleStyle(BuildContext context) {
-    return Theme.of(context).textTheme.titleMedium;
   }
 }
