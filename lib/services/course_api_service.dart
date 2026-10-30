@@ -62,6 +62,20 @@ class CourseApiService {
     }
   }
 
+  // DELETE /courses/{id}: menghapus course. API mengembalikan 204 tanpa
+  // body saat berhasil, jadi semua status 2xx dianggap sukses.
+  Future<void> deleteCourse(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/courses/$id'));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final detail = _errorDetail(response.body);
+      throw Exception(
+        'Gagal menghapus course (HTTP ${response.statusCode})'
+        '${detail.isEmpty ? '' : ': $detail'}',
+      );
+    }
+  }
+
   // Mengambil pesan dari body error API: {"error": "...", "status": 400}.
   // Jika body bukan JSON yang diharapkan, kembalikan string kosong.
   String _errorDetail(String body) {

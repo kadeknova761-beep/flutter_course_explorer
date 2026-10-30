@@ -28,6 +28,59 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     );
   }
 
+  // Hapus (HTTP DELETE): tampilkan dialog konfirmasi dulu, jalankan DELETE
+  // hanya jika pengguna menyetujui.
+  Future<void> _confirmDelete(Course course) async {
+    // Diambil sebelum await agar tidak memakai context setelah async gap.
+    final provider = context.read<CourseProvider>();
+
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Hapus course?'),
+          content: Text(
+            '${course.title} (${course.code}) akan dihapus dari server. '
+            'Tindakan ini tidak dapat dibatalkan.\n\n'
+            'Dikonfirmasi oleh: $studentId - $studentName',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Hapus'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    final bool success = await provider.deleteCourse(course);
+
+    // Halaman bisa saja sudah ditutup selama request berjalan.
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Course ${course.code} berhasil dihapus')),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.deleteError ?? 'Gagal menghapus course'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // watch(): course dan status favorite dibaca dari CourseProvider.
@@ -40,6 +93,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
       orElse: () => widget.course,
     );
     final bool isFavorite = provider.isFavorite(course.code);
+    final bool isDeleting = provider.isDeleting;
 
     return Scaffold(
       appBar: AppBar(title: Text(course.title)),
@@ -147,6 +201,23 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                   onPressed: course.id == null ? null : () => _openEdit(course),
                   icon: const Icon(Icons.edit),
                   label: const Text('Edit Course'),
+                ),
+                const SizedBox(height: 8),
+                // Hapus (HTTP DELETE). Nonaktif saat request berjalan agar
+                // tidak terjadi klik ganda.
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                  onPressed: (course.id == null || isDeleting)
+                      ? null
+                      : () => _confirmDelete(course),
+                  icon: isDeleting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.delete),
+                  label: const Text('Hapus Course'),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton(

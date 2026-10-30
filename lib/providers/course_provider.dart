@@ -108,6 +108,44 @@ class CourseProvider extends ChangeNotifier {
     return success;
   }
 
+  // ===================== DELETE STATE =====================
+
+  bool _isDeleting = false;
+  String? _deleteError;
+
+  bool get isDeleting => _isDeleting;
+  String? get deleteError => _deleteError;
+
+  // Mengembalikan true jika berhasil. Jika berhasil, course juga dibuang dari
+  // favorites agar tidak tersisa data yatim, lalu daftar dimuat ulang.
+  Future<bool> deleteCourse(Course course) async {
+    final id = course.id;
+    if (id == null || _isDeleting) return false;
+
+    _isDeleting = true;
+    _deleteError = null;
+    notifyListeners();
+
+    var success = false;
+    try {
+      await repository.deleteCourse(id);
+      success = true;
+    } catch (e) {
+      _deleteError = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      _isDeleting = false;
+      notifyListeners();
+    }
+
+    if (success) {
+      if (_favorites.remove(course.code)) {
+        notifyListeners();
+      }
+      await loadCourses();
+    }
+    return success;
+  }
+
   // ===================== SHARED STATE: FAVORITES =====================
 
   final Set<String> _favorites = {};
