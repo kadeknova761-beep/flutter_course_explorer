@@ -63,3 +63,33 @@ Menjalankan salah satu demo:
 ```bash
 flutter run -d chrome -t lib/experiments/async_state_experiment.dart
 ```
+## Endpoint REST (Pertemuan 7)
+
+Disusun oleh: Kadek Nova Krisna Putra (2415051117)
+
+| | |
+| --- | --- |
+| Base URL | https://course-api-pearl.vercel.app |
+| Endpoint | GET /courses |
+| Status code | 200 OK |
+| Resource | courses |
+
+Contoh satu item response:
+
+```json
+{
+  "id": 5,
+  "code": "MOB05",
+  "title": "REST API & Database",
+  "credits": 3,
+  "status": "done",
+  "created_at": "2026-10-21T03:28:09.790592Z"
+}
+```
+
+Field: `id` (int), `code` (String), `title` (String), `credits` (int),
+`status` (String: planned, active, atau done), `created_at` (String, waktu
+pembuatan format ISO 8601).
+
+Endpoint lain: `GET /courses/{id}`, `POST /courses`, `PUT /courses/{id}`,
+`PATCH /courses/{id}`, `DELETE /courses/{id}`.
