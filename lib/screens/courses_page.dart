@@ -8,6 +8,7 @@ import '../utils/course_status.dart';
 import '../widgets/course_card.dart';
 import '../widgets/course_state_gate.dart';
 import 'course_detail_page.dart';
+import 'course_form_page.dart';
 
 class CoursesPage extends StatelessWidget {
   const CoursesPage({super.key});
@@ -24,6 +25,14 @@ class CoursesPage extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => CourseDetailPage(course: course)),
+    );
+  }
+
+  // Buka form tambah course (HTTP POST).
+  void openForm(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CourseFormPage()),
     );
   }
 
@@ -66,15 +75,26 @@ class CoursesPage extends StatelessWidget {
 
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: Text(
-            '$studentId - $studentName',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  '$studentId - $studentName',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              FilledButton.icon(
+                onPressed: () => openForm(context),
+                icon: const Icon(Icons.add),
+                label: const Text('Tambah'),
+              ),
+            ],
           ),
         ),
         Expanded(
-          // Loading, error, dan success ditangani oleh CourseStateGate.
+          // Loading, error, empty, dan success ditangani oleh CourseStateGate.
           child: CourseStateGate(
             builder: (context, courses) {
               return LayoutBuilder(

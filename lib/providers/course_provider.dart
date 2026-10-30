@@ -5,9 +5,10 @@ import '../repositories/course_repository.dart';
 
 // Nama: Kadek Nova Krisna Putra | NIM: 2415051117
 //
-// CourseProvider menyimpan dua kelompok state:
-//   1. Async state data course: courses, isLoading, error (Tahap 11)
-//   2. Shared state favorites: favorites dan toggleFavorite (Tahap 5)
+// CourseProvider menyimpan tiga kelompok state:
+//   1. Async state data course: courses, isLoading, error
+//   2. State proses simpan: isSaving, saveError (create course)
+//   3. Shared state favorites: favorites dan toggleFavorite
 // Provider hanya berbicara dengan repository, tidak mengakses file atau
 // sumber data secara langsung, dan tidak menyimpan context milik UI.
 class CourseProvider extends ChangeNotifier {
@@ -42,6 +43,41 @@ class CourseProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // ===================== SAVE STATE: CREATE =====================
+
+  bool _isSaving = false;
+  String? _saveError;
+
+  bool get isSaving => _isSaving;
+  String? get saveError => _saveError;
+
+  // Mengembalikan true jika berhasil. Jika berhasil, daftar course dimuat
+  // ulang dari server (isi list diganti, bukan ditambah secara lokal).
+  Future<bool> createCourse(Course course) async {
+    // Cegah submit ganda saat request sebelumnya masih berjalan.
+    if (_isSaving) return false;
+
+    _isSaving = true;
+    _saveError = null;
+    notifyListeners();
+
+    var success = false;
+    try {
+      await repository.createCourse(course);
+      success = true;
+    } catch (e) {
+      _saveError = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+
+    if (success) {
+      await loadCourses();
+    }
+    return success;
   }
 
   // ===================== SHARED STATE: FAVORITES =====================
