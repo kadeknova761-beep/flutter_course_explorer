@@ -3,17 +3,19 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/course.dart';
+import 'course_data_source.dart';
 
 // Nama: Kadek Nova Krisna Putra | NIM: 2415051117 | Kelas: PTI 5C
 //
 // Service bertanggung jawab pada detail teknis komunikasi dengan backend
 // (request HTTP, status code, dan decode JSON). Screen dan Provider tidak
 // boleh memakai http atau jsonDecode secara langsung.
-class CourseApiService {
+class CourseApiService implements CourseDataSource {
   CourseApiService(this.baseUrl);
 
   final String baseUrl;
 
+  @override
   Future<List<Course>> getCourses() async {
     final response = await http.get(Uri.parse('$baseUrl/courses'));
 
@@ -26,6 +28,7 @@ class CourseApiService {
   }
 
   // POST /courses: membuat course baru. id dibuat oleh server.
+  @override
   Future<Course> createCourse(Course course) async {
     final response = await http.post(
       Uri.parse('$baseUrl/courses'),
@@ -46,6 +49,7 @@ class CourseApiService {
 
   // PUT /courses/{id}: mengganti seluruh resource (code, title, credits
   // wajib; status opsional). Dipakai karena form edit mengirim semua field.
+  @override
   Future<void> updateCourse(int id, Course course) async {
     final response = await http.put(
       Uri.parse('$baseUrl/courses/$id'),
@@ -64,6 +68,7 @@ class CourseApiService {
 
   // DELETE /courses/{id}: menghapus course. API mengembalikan 204 tanpa
   // body saat berhasil, jadi semua status 2xx dianggap sukses.
+  @override
   Future<void> deleteCourse(int id) async {
     final response = await http.delete(Uri.parse('$baseUrl/courses/$id'));
 
