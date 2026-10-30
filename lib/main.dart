@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app.dart';
+import 'constants/api_config.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
-import 'services/course_service.dart';
+import 'services/course_api_service.dart';
 
 // ===== KLASIFIKASI STATE (PERTEMUAN 6 - TAHAP 1) =====
 // LOCAL STATE (hanya dipakai satu widget, dikelola dengan setState):
@@ -16,16 +17,17 @@ import 'services/course_service.dart';
 //   4. keyboardOpen    -> _KeyboardCasePageState (simulasi keyboard)
 // SHARED STATE (dibutuhkan beberapa screen/widget):
 //   5. favorites       -> CourseProvider (Provider), dipakai Home, Courses, Profile
-//   6. data courses    -> CourseProvider.loadCourses() (Provider -> Repository -> Service)
+//   6. data courses    -> CourseProvider.loadCourses() (Provider -> Repository -> CourseApiService)
 
 void main() {
   // Tahap 6: CourseProvider disediakan di atas MyApp sehingga seluruh
   // widget di bawahnya dapat mengaksesnya (dipakai mulai Tahap 7).
   runApp(
     ChangeNotifierProvider(
-      // loadCourses(): course dimuat lewat Provider -> Repository -> Service.
-      create: (_) =>
-          CourseProvider(CourseRepository(CourseService()))..loadCourses(),
+      // loadCourses(): course dimuat lewat Provider -> Repository -> API Service.
+      create: (_) => CourseProvider(
+        CourseRepository(CourseApiService(apiBaseUrl)),
+      )..loadCourses(),
       child: const MyApp(),
     ),
   );

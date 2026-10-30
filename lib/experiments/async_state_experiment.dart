@@ -4,24 +4,29 @@ import 'package:provider/provider.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../repositories/course_repository.dart';
-import '../services/course_service.dart';
+import '../constants/api_config.dart';
+import '../services/course_api_service.dart';
 
 const String studentName = 'Kadek Nova Krisna Putra';
 const String studentId = '2415051117';
 
-// Service JSON asli, tetapi ditunda agar indikator loading sempat terlihat.
-class DelayedCourseService extends CourseService {
+// Service API asli, tetapi ditunda agar indikator loading sempat terlihat.
+class DelayedCourseService extends CourseApiService {
+  DelayedCourseService() : super(apiBaseUrl);
+
   @override
-  Future<List<Course>> loadCourses() async {
+  Future<List<Course>> getCourses() async {
     await Future.delayed(const Duration(milliseconds: 1500));
-    return super.loadCourses();
+    return super.getCourses();
   }
 }
 
 // Service yang selalu gagal untuk menguji tampilan error.
-class FailingCourseService extends CourseService {
+class FailingCourseService extends CourseApiService {
+  FailingCourseService() : super(apiBaseUrl);
+
   @override
-  Future<List<Course>> loadCourses() async {
+  Future<List<Course>> getCourses() async {
     await Future.delayed(const Duration(milliseconds: 1000));
     throw Exception('Gagal memuat data course (simulasi)');
   }

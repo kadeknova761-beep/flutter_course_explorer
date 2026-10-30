@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 
 import '../models/course.dart';
 import '../repositories/course_repository.dart';
-import '../services/course_service.dart';
+import '../constants/api_config.dart';
+import '../services/course_api_service.dart';
 
 const String studentName = 'Kadek Nova Krisna Putra';
 const String studentId = '2415051117';
 
 // Service tiruan yang mensimulasikan data dari API. Dibuat hanya untuk demo.
-class FakeApiCourseService extends CourseService {
+class FakeApiCourseService extends CourseApiService {
+  FakeApiCourseService() : super(apiBaseUrl);
   @override
-  Future<List<Course>> loadCourses() async {
+  Future<List<Course>> getCourses() async {
     await Future.delayed(const Duration(milliseconds: 800));
     return const [
       Course(
@@ -66,9 +68,9 @@ class _CourseRepositoryExperimentPageState
   Future<List<Course>> _load() {
     // Hanya baris ini yang tahu service mana yang dipakai. Repository dan UI
     // di bawahnya sama persis untuk kedua sumber data.
-    final CourseService service = useFakeApi
+    final CourseApiService service = useFakeApi
         ? FakeApiCourseService()
-        : CourseService();
+        : CourseApiService(apiBaseUrl);
     final repository = CourseRepository(service);
 
     debugPrint('Repository memakai ${service.runtimeType}');
@@ -98,7 +100,7 @@ class _CourseRepositoryExperimentPageState
             const SizedBox(height: 8),
             SegmentedButton<bool>(
               segments: const [
-                ButtonSegment(value: false, label: Text('JSON asset')),
+                ButtonSegment(value: false, label: Text('API (asli)')),
                 ButtonSegment(value: true, label: Text('API (simulasi)')),
               ],
               selected: {useFakeApi},
@@ -106,7 +108,7 @@ class _CourseRepositoryExperimentPageState
             ),
             const SizedBox(height: 8),
             Text(
-              'Sumber data: ${useFakeApi ? 'FakeApiCourseService' : 'CourseService'}',
+              'Sumber data: ${useFakeApi ? 'FakeApiCourseService' : 'CourseApiService'}',
             ),
             const SizedBox(height: 8),
             Expanded(

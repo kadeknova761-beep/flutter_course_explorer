@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../providers/course_provider.dart';
 import '../repositories/course_repository.dart';
-import '../services/course_service.dart';
+import '../constants/api_config.dart';
+import '../services/course_api_service.dart';
 
 // Demo Tahap 5 (Pertemuan 6): CourseProvider (ChangeNotifier) dengan
 // notifyListeners(). Provider belum dipasang (itu Tahap 6), jadi widget
@@ -54,7 +55,7 @@ class _ChangeNotifierExperimentPageState
     extends State<ChangeNotifierExperimentPage> {
   // Object state dibuat satu kali dan di-dispose bersama halaman.
   final CourseProvider provider = CourseProvider(
-    CourseRepository(CourseService()),
+    CourseRepository(CourseApiService(apiBaseUrl)),
   );
 
   @override

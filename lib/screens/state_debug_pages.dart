@@ -5,7 +5,8 @@ import '../constants/student_identity.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../repositories/course_repository.dart';
-import '../services/course_service.dart';
+import '../constants/api_config.dart';
+import '../services/course_api_service.dart';
 import '../widgets/course_state_gate.dart';
 
 // Nama: Kadek Nova Krisna Putra | NIM: 2415051117
@@ -292,11 +293,13 @@ class _ContextCasePageState extends State<ContextCasePage> {
 // ---------------- Kasus C: CourseService sengaja error ----------------
 
 // Service tiruan yang selalu gagal untuk menguji error state.
-class FailingCourseService extends CourseService {
+class FailingCourseService extends CourseApiService {
+  FailingCourseService() : super(apiBaseUrl);
+
   @override
-  Future<List<Course>> loadCourses() async {
+  Future<List<Course>> getCourses() async {
     await Future.delayed(const Duration(milliseconds: 800));
-    throw Exception('CourseService gagal (simulasi Kasus C)');
+    throw Exception('CourseApiService gagal (simulasi Kasus C)');
   }
 }
 
@@ -337,8 +340,8 @@ class _ServiceErrorCasePageState extends State<ServiceErrorCasePage> {
                   CourseRepository(
                     useFailingService
                         ? FailingCourseService()
-                        : CourseService(),
-                  ),
+                        : CourseApiService(apiBaseUrl),
+                  ), // CourseRepository
                 )..loadCourses(),
                 child: CourseStateGate(
                   builder: (context, courses) {
