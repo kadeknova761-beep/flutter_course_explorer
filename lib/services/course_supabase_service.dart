@@ -36,6 +36,10 @@ class CourseSupabaseService implements CourseDataSource {
     await supabase.from('courses').update(course.toJson()).eq('id', id);
   }
 
+  // Nama: Kadek Nova Krisna Putra | NIM: 2415051117 | Kelas: PTI 5C
+  // Tahap 15: DELETE course berdasarkan id di Supabase
   @override
-  Future<void> deleteCourse(int id) => throw UnimplementedError();
+  Future<void> deleteCourse(int id) async {
+    await supabase.from('courses').delete().eq('id', id);
+  }
 }
