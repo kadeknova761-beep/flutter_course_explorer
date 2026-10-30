@@ -17,9 +17,17 @@ class CourseSupabaseService implements CourseDataSource {
         .toList();
   }
 
-  // Sementara, dikerjakan di Tahap 13-15
+  // Tahap 13: INSERT ke Supabase
+  // Nama: Kadek Nova Krisna Putra | NIM: 2415051117 | Kelas: PTI 5C
   @override
-  Future<Course> createCourse(Course course) => throw UnimplementedError();
+  Future<Course> createCourse(Course course) async {
+    final row = await supabase
+        .from('courses')
+        .insert(course.toJson())
+        .select()
+        .single();
+    return Course.fromJson(row);
+  }
 
   @override
   Future<void> updateCourse(int id, Course course) =>
