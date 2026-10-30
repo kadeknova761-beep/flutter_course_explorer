@@ -93,3 +93,11 @@ pembuatan format ISO 8601).
 
 Endpoint lain: `GET /courses/{id}`, `POST /courses`, `PUT /courses/{id}`,
 `PATCH /courses/{id}`, `DELETE /courses/{id}`.
+
+## Tahap 11 - Schema Database Supabase
+Tabel `courses`: id (bigint identity, PK), code, title, credits (int),
+status (planned/active/done, CHECK), created_at (timestamptz).
+RLS aktif dengan policy permisif untuk anon, hanya untuk laboratorium,
+bukan pola produksi. SQL lengkap: `docs/schema.sql`.
+
+Nama: Kadek Nova Krisna Putra | NIM: 2415051117 | Kelas: PTI 5C
