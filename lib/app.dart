@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'screens/responsive_shell.dart';
+import 'screens/login_page.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: const ResponsiveShell(),
+      home: const LoginPage(),
     );
   }
 }
