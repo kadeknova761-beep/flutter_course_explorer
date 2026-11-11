@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
+import '../widgets/role_guard.dart';
 import 'login_page.dart';
 import 'responsive_shell.dart';
 
@@ -36,44 +37,55 @@ class _AccountHomePageState extends State<AccountHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('KosFinder'),
-        actions: [
-          IconButton(
-            tooltip: 'Logout',
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
+    return FutureBuilder<UserProfile?>(
+      future: _profileFuture,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final p = snap.data;
+        if (snap.hasError || p == null) {
+          return const Scaffold(
+            body: Center(child: Text('Gagal memuat profil')),
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('KosFinder (${p.role})'),
+            actions: [
+              IconButton(
+                tooltip: 'Logout',
+                icon: const Icon(Icons.logout),
+                onPressed: _logout,
+              ),
+            ],
           ),
-        ],
-      ),
-      body: FutureBuilder<UserProfile?>(
-        future: _profileFuture,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snap.hasError || snap.data == null) {
-            return const Center(child: Text('Gagal memuat profil'));
-          }
-          final p = snap.data!;
-          return ListView(
+          // menu yang tampil berbeda untuk tiap role
+          body: ListView(
             children: [
               ListTile(
                 leading: const Icon(Icons.person),
-                title: const Text('Nama'),
-                subtitle: Text(p.name.isEmpty ? '-' : p.name),
+                title: Text(p.name.isEmpty ? p.email : p.name),
+                subtitle: Text('${p.email} • ${p.role}'),
               ),
-              ListTile(
-                leading: const Icon(Icons.email),
-                title: const Text('Email'),
-                subtitle: Text(p.email),
+              const Divider(),
+              const ListTile(
+                leading: Icon(Icons.list),
+                title: Text('Daftar Kos'),
               ),
-              ListTile(
-                leading: const Icon(Icons.badge),
-                title: const Text('Role'),
-                subtitle: Text(p.role),
-              ),
+              if (p.isOwner || p.isAdmin)
+                const ListTile(
+                  leading: Icon(Icons.home_work),
+                  title: Text('My Kos'),
+                ),
+              if (p.isAdmin)
+                const ListTile(
+                  leading: Icon(Icons.admin_panel_settings),
+                  title: Text('Kelola Data (Admin)'),
+                ),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.school),
@@ -84,9 +96,26 @@ class _AccountHomePageState extends State<AccountHomePage> {
                 ),
               ),
             ],
-          );
-        },
-      ),
+          ),
+          // tombol "Tambah Kos" hanya untuk owner/admin
+          floatingActionButton: RoleGuard(
+            role: p.role,
+            allowed: const ['owner', 'admin'],
+            child: FloatingActionButton.extended(
+              onPressed: () {
+                // Halaman Add Kos dibuat di Praktik 5
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Halaman Tambah Kos (Praktik 5)'),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.add_home),
+              label: const Text('Tambah Kos'),
+            ),
+          ),
+        );
+      },
     );
   }
 }
